@@ -1,8 +1,7 @@
 #Utils and System Libraries
 import copy
 import time
-from tqdm import tqdm
-# 
+from tqdm import tqdm 
 
 #Math Libraries
 import numpy as np
