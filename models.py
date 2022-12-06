@@ -67,9 +67,13 @@ class Bottleneck(nn.Module):
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
+        print("Relu1: ", out.size())
         out = F.relu(self.bn2(self.conv2(out)))
+        print("Relu2: ", out.size())
         out = self.bn3(self.conv3(out))
+        print("Out1: ", out.size())
         out += self.shortcut(x)
+        print("Shortcut : ", self.shortcut(x).size())
         out = F.relu(out)
         return out
 

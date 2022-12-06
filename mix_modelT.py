@@ -4,6 +4,7 @@ From 'Deep Residual Learning for Image Recognition' by Kaiming et al.
 This version has in the first convolutional layer a kernel size of 3 instead of 7 to deal better with CIFAR-10.
 We added the option to set the normalization layer type by passing an argument when calling ResNet50.
 """
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -67,21 +68,23 @@ class Bottleneck(nn.Module):
         self.gn2 = Norm(planes, type="Group Norm")
         self.conv3 = nn.Conv2d(planes, self.expansion *
                                planes, kernel_size=1, bias=False)
-        self.bn3 = Norm(planes, type="Batch Norm")
-        self.gn3 = Norm(planes, type="Group Norm")
+        self.bn3 = Norm(self.expansion * planes, type="Batch Norm")
+        self.gn3 = Norm(self.expansion * planes, type="Group Norm")
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion*planes:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_planes, self.expansion*planes,
-                          kernel_size=1, stride=stride, bias=False),
-                (self.alpha_b*Norm(planes, type="Batch Norm")+ self.alpha_g*Norm(planes, type="Group Norm"))
+                nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False)
             )
 
     def forward(self, x):
         out = F.relu(self.alpha_b*self.bn1(self.conv1(x))+ self.alpha_g * self.gn1(self.conv1(x)))
-        out = (self.alpha_b * self.bn2(self.conv2(out)) + self.alpha_g *self.gn2(self.conv2(out)))
-        out = (self.alpha_b * self.bn3(self.conv2(out)) + self.alpha_g *self.gn3(self.conv2(out)))
-        out += self.shortcut(x)
+        out = F.relu(self.alpha_b * self.bn2(self.conv2(out)) + self.alpha_g *self.gn2(self.conv2(out)))
+        #print("Batch: ",self.bn2(self.conv2(out)).size())
+        #print("Group: ",self.gn2(self.conv2(out)).size())
+        out = (self.alpha_b * self.bn3(self.conv3(out)) + self.alpha_g *self.gn3(self.conv3(out)))
+        #print("Layer2: ",out.size())
+        #print("Shortcut: ",self.shortcut(x).size())
+        out += (self.alpha_b * self.bn3(self.shortcut(x)) + self.alpha_g *self.gn3(self.shortcut(x)))
         out = F.relu(out)
         return out
 
