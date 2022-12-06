@@ -55,7 +55,7 @@ if __name__ == '__main__':
         for idx in idxs_users:
             local_net = LocalUpdate(dataset=train_dataset, idxs=user_groups[idx], local_batch_size=args.local_bs,\
                 local_epochs=args.local_ep, worker_init_fn=seed_worker(0), generator=g, device=device)
-            local_resnet = ResNet50(norm_type = "Group Norm",alpha_b = alpha_b, alpha_g = alpha_g)
+            local_resnet = ResNet50(norm_type = "Group Norm",alpha_b = 1 - alpha_b, alpha_g =  1- alpha_g)
             local_resnet.load_state_dict(global_weights)
             local_resnet.to(device)
             w, loss = local_net.update_weights(model=copy.deepcopy(local_resnet))
